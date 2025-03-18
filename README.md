@@ -1,5 +1,5 @@
 # Data-augmentation-for-solar-flare-prediction
-This is the repository for our work titled "Solar Flare Prediction through Time Series Data Augmentation", which has been submitted to AGU Space Weather Journal. 
+This is the repository for our work titled "Solar Flare Prediction through Time Series Data Augmentation", which has been submitted to Advances in Space Research Journal
 
 # Data Download
 download the raw data from: https://dmlab.cs.gsu.edu/solar/data/data-comp-2020/
