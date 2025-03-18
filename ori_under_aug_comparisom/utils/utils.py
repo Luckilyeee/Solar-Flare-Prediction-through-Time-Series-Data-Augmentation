@@ -43,18 +43,61 @@ def load_under_data(method):
 
     return X_train, y_train, X_val, y_val, X_test, y_test
 
-def load_aug_ratios(method, size):
 
-    X_train = np.load("aug_sf/data/ratio_study/" + method + '/' + str(size) + '/' +"X_train_combined.npy")
-    y_train = np.load("aug_sf/data/ratio_study/" + method + '/' + str(size) + '/' +"y_train_combined.npy")
+def load_data_aug_onlyx(method):
+    print("loading syn data for method:", method)
+    # discriminative_guided_warp required all classes to generate synthetic data
+    if method == 'discriminative_guided_warp':
+        path = "aug_sf/data/"
+        x_synthetic = np.load(
+            "aug_sf/data/syn/" + method + "/Solarflare/X_train_aug.npy")
+        X_train_real = np.load(path + "stra_sampling/xtrain_subsampled.npy")
+        print(x_synthetic.shape, X_train_real.shape)
+        y_train_real = np.load(path + "stra_sampling/ytrain_subsampled.npy")
+        y_synthetic = y_train_real
 
-     # test and valitation datasets are from the /home/dmlab_a/Peiyu/aug_sf/data/Ori_data/ folder
-    X_test = np.load("aug_sf/data/" + "Ori_data/test/xtest.npy")
-    y_test = np.load("aug_sf/data/" + "Ori_data/test/ytest.npy")
-    X_val = np.load("aug_sf/data/" + "Ori_data/val/xval.npy")
-    y_val = np.load("aug_sf/data/" + "Ori_data/val/yval.npy")
+        x_synthetic_class_1 = x_synthetic[y_synthetic == 1]
+        y_synthetic_class_1 = y_synthetic[y_synthetic == 1]
 
-    return X_train, y_train, X_val, y_val, X_test, y_test
+        x_synthetic_class_1 = x_synthetic_class_1.transpose(0, 2, 1)
+
+        X_aug = np.vstack((X_train_real, x_synthetic_class_1))
+        y_aug = np.hstack((y_train_real, y_synthetic_class_1))
+    else:
+        path = "aug_sf/data/"
+        x_synthetic = np.load(
+            "aug_sf/data/syn/" + method + "/Solarflare/X_train_aug.npy")
+        y_synthetic = np.ones(x_synthetic.shape[0])
+        X_train_real = np.load(path + "stra_sampling/xtrain_subsampled.npy")
+        print(x_synthetic.shape, X_train_real.shape)
+        y_train_real = np.load(path + "stra_sampling/ytrain_subsampled.npy")
+
+        x_synthetic = x_synthetic.transpose(0, 2, 1)
+
+        X_aug = np.vstack((X_train_real, x_synthetic))
+        y_aug = np.hstack((y_train_real, y_synthetic))
+
+
+
+    # Optional: Shuffle the augmented data
+    permutation = np.random.permutation(len(X_aug))
+    X_aug = X_aug[permutation]
+    y_aug = y_aug[permutation]
+
+    unique, counts = np.unique(y_aug, return_counts=True)
+    print("Label counts in y_aug:", dict(zip(unique, counts)))
+
+    print("Shape of augmented X:", X_aug.shape)
+    print("Shape of augmented y:", y_aug.shape)
+
+    X_test = np.load(path + '/Ori_data' + "/test/xtest.npy")
+    X_val = np.load(path + '/Ori_data' + "/val/xval.npy")
+
+    y_test = np.load(path + '/Ori_data' + "/test/ytest.npy")
+    y_val = np.load(path + '/Ori_data' + "/val/yval.npy")
+
+    return X_aug, y_aug, X_val, y_val, X_test, y_test
+
 
 
 def calculate_metrics(y_true, y_pred, duration, y_true_val=None, y_pred_val=None):
@@ -140,34 +183,31 @@ def generate_results_csv_1(output_file_name, root_dir):
         res.to_csv(root_dir + "/results_under/" + classifier_name + "/" + output_file_name, index=False)
     return res
 
-def generate_results_csv_6x(output_file_name, root_dir):
+def generate_results_csv_augstra_onlyx(output_file_name, root_dir):
     for classifier_name in CLASSIFIERS:
         res = pd.DataFrame(
-            columns=['classifier_name', 'archive_name', 'size', 'Accuracy', 'Precision', 'Recall', 'F1', 'TSS',
-                     'hss1', 'HSS', 'duration'])
+            columns=['classifier_name', 'dataset_name', 'archive_name', 'Accuracy', 'Precision', 'Recall', 'F1', 'TSS',
+                     'HSS1', 'HSS', 'duration'])
         for archive_name in ARCHIVE_NAMES:
-            for size in sizes:
-                for it in range(ITERATIONS):
-                    curr_archive_name = archive_name
-                    if it != 0:
-                        curr_archive_name = curr_archive_name + '_itr_' + str(it)
-                    output_dir = root_dir + '/results_6x/' + str(size) + '/' + classifier_name + '/' \
+            for it in range(ITERATIONS):
+                curr_archive_name = archive_name
+                if it != 0:
+                    curr_archive_name = curr_archive_name + '_itr_' + str(it)
+                output_dir = root_dir + '/results_aug_stra_x/' + classifier_name + '/' \
                                  + curr_archive_name + '/' + 'solarflare' + '/' + 'df_metrics.csv'
+                if not os.path.exists(output_dir):
+                    continue
 
-                    if not os.path.exists(output_dir):
-                        continue
+                df_metrics = pd.read_csv(output_dir)
+                df_metrics['classifier_name'] = classifier_name
+                df_metrics['dataset_name'] = 'solar_flare'
+                df_metrics['archive_name'] = archive_name
 
-                    df_metrics = pd.read_csv(output_dir)
-                    df_metrics['classifier_name'] = classifier_name
-                    df_metrics['size'] = size
-                    df_metrics['archive_name'] = archive_name
+                res = pd.concat((res, df_metrics), axis=0, sort=False)
+        print(root_dir + "/results_aug_stra_x/" + classifier_name + "/" + output_file_name)
 
-                    res = pd.concat((res, df_metrics), axis=0, sort=False)
-        print(root_dir + "/results_6x/" + classifier_name + "/" + output_file_name)
-
-        res.to_csv(root_dir + "/results_6x/" + classifier_name + "/" + output_file_name, index=False)
-        return res
-
+        res.to_csv(root_dir + "/results_aug_stra_x/" + classifier_name + "/" + output_file_name, index=False)
+    return res
 
 def plot_epochs_metric(hist, file_name, metric='loss'):
     plt.figure()
