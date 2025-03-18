@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", message=".*size changed.*", category=RuntimeWa
 
 
 def load_ori_data(method):
-    path = "/home/dmlab_a/Peiyu/aug_sf/data/"
+    path = "aug_sf/data/"
     X_train = np.load(path + method + "/train/xtrain.npy")
     X_test = np.load(path + method + "/test/xtest.npy")
     X_val = np.load(path + method + "/val/xval.npy")
@@ -40,6 +40,19 @@ def load_under_data(method):
     y_test = np.load(path + "Ori_data/test/ytest.npy")
     X_val = np.load(path + "Ori_data/val/xval.npy")
     y_val = np.load(path + "Ori_data/val/yval.npy")
+
+    return X_train, y_train, X_val, y_val, X_test, y_test
+
+def load_aug_ratios(method, size):
+
+    X_train = np.load("aug_sf/data/ratio_study/" + method + '/' + str(size) + '/' +"X_train_combined.npy")
+    y_train = np.load("aug_sf/data/ratio_study/" + method + '/' + str(size) + '/' +"y_train_combined.npy")
+
+     # test and valitation datasets are from the /home/dmlab_a/Peiyu/aug_sf/data/Ori_data/ folder
+    X_test = np.load("aug_sf/data/" + "Ori_data/test/xtest.npy")
+    y_test = np.load("aug_sf/data/" + "Ori_data/test/ytest.npy")
+    X_val = np.load("aug_sf/data/" + "Ori_data/val/xval.npy")
+    y_val = np.load("aug_sf/data/" + "Ori_data/val/yval.npy")
 
     return X_train, y_train, X_val, y_val, X_test, y_test
 
@@ -126,6 +139,35 @@ def generate_results_csv_1(output_file_name, root_dir):
 
         res.to_csv(root_dir + "/results_under/" + classifier_name + "/" + output_file_name, index=False)
     return res
+
+def generate_results_csv_6x(output_file_name, root_dir):
+    for classifier_name in CLASSIFIERS:
+        res = pd.DataFrame(
+            columns=['classifier_name', 'archive_name', 'size', 'Accuracy', 'Precision', 'Recall', 'F1', 'TSS',
+                     'hss1', 'HSS', 'duration'])
+        for archive_name in ARCHIVE_NAMES:
+            for size in sizes:
+                for it in range(ITERATIONS):
+                    curr_archive_name = archive_name
+                    if it != 0:
+                        curr_archive_name = curr_archive_name + '_itr_' + str(it)
+                    output_dir = root_dir + '/results_6x/' + str(size) + '/' + classifier_name + '/' \
+                                 + curr_archive_name + '/' + 'solarflare' + '/' + 'df_metrics.csv'
+
+                    if not os.path.exists(output_dir):
+                        continue
+
+                    df_metrics = pd.read_csv(output_dir)
+                    df_metrics['classifier_name'] = classifier_name
+                    df_metrics['size'] = size
+                    df_metrics['archive_name'] = archive_name
+
+                    res = pd.concat((res, df_metrics), axis=0, sort=False)
+        print(root_dir + "/results_6x/" + classifier_name + "/" + output_file_name)
+
+        res.to_csv(root_dir + "/results_6x/" + classifier_name + "/" + output_file_name, index=False)
+        return res
+
 
 def plot_epochs_metric(hist, file_name, metric='loss'):
     plt.figure()
