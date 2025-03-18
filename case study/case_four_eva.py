@@ -2,8 +2,7 @@ import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 
 methods = ['fcn', 'resnet']
-path0 = "/Users/peiyuli/PycharmProjects/aug_sf_updated/results_four/"
-# "/home/dmlab_a/Peiyu/aug_sf/results_four_aug/fcn/SF_aug_mw_itr_1/solarflare"
+path0 = "results_four/"
 def res(method):
     print(method)
     y_true = np.load(
