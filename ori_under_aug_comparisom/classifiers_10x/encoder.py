@@ -1,0 +1,119 @@
+# Our proposed model CNN + LSTM
+import tensorflow.keras as keras
+import tensorflow as tf
+import tensorflow_addons as tfa
+import numpy as np
+import time
+
+from utils.utils import save_logs
+from utils.utils import save_test_duration, calculate_metrics
+
+class Classifier_ENCODER:
+
+    def __init__(self, output_directory, input_shape, nb_classes, verbose=False,build=True):
+        self.output_directory = output_directory
+        if build == True:
+            self.model = self.build_model(input_shape, nb_classes)
+            if (verbose == True):
+                self.model.summary()
+            self.verbose = verbose
+            self.model.save_weights(self.output_directory + 'model_init.hdf5')
+
+    def build_model(self, input_shape, nb_classes):
+        input_layer = keras.layers.Input(input_shape)
+
+        # conv block -0
+        conv1 = keras.layers.Conv1D(filters=128,kernel_size=5,strides=1,padding='same')(input_layer)
+        conv1 = tfa.layers.InstanceNormalization()(conv1)
+        conv1 = keras.layers.PReLU(shared_axes=[1])(conv1)
+        conv1 = keras.layers.Dropout(rate=0.2)(conv1)
+        conv1 = keras.layers.MaxPooling1D(pool_size=2)(conv1)
+        # conv block -2
+        conv2 = keras.layers.Conv1D(filters=256,kernel_size=11,strides=1,padding='same')(conv1)
+        conv2 = tfa.layers.InstanceNormalization()(conv2)
+        conv2 = keras.layers.PReLU(shared_axes=[1])(conv2)
+        conv2 = keras.layers.Dropout(rate=0.2)(conv2)
+        conv2 = keras.layers.MaxPooling1D(pool_size=2)(conv2)
+        # conv block -3
+        conv3 = keras.layers.Conv1D(filters=512,kernel_size=21,strides=1,padding='same')(conv2)
+        conv3 = tfa.layers.InstanceNormalization()(conv3)
+        conv3 = keras.layers.PReLU(shared_axes=[1])(conv3)
+        conv3 = keras.layers.Dropout(rate=0.2)(conv3)
+        # split for attention
+        attention_data = keras.layers.Lambda(lambda x: x[:,:,:256])(conv3)
+        attention_softmax = keras.layers.Lambda(lambda x: x[:,:,256:])(conv3)
+        # attention mechanism
+        attention_softmax = keras.layers.Softmax()(attention_softmax)
+        multiply_layer = keras.layers.Multiply()([attention_softmax,attention_data])
+        # last layer
+        dense_layer = keras.layers.Dense(units=256,activation='sigmoid')(multiply_layer)
+        dense_layer = tfa.layers.InstanceNormalization()(dense_layer)
+        # output layer
+        flatten_layer = keras.layers.Flatten()(dense_layer)
+        output_layer = keras.layers.Dense(units=nb_classes,activation='softmax')(flatten_layer)
+
+        model = keras.models.Model(inputs=input_layer, outputs=output_layer)
+
+        model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.Adam(0.00001),
+                      metrics=['accuracy'])
+
+        reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=50,
+                                                      min_lr=0.000001)
+
+        file_path = self.output_directory + 'best_model.hdf5'
+
+        model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='val_loss',
+                                                           save_best_only=True)
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=50, mode='min')
+
+        self.callbacks = [reduce_lr, model_checkpoint, early_stopping]
+
+        return model
+
+    def fit(self, x_train, y_train, x_test, y_true):
+        if not tf.test.is_gpu_available:
+            print('error')
+            exit()
+        # x_val and y_val are only used to monitor the test loss and NOT for training
+        batch_size = 32
+        nb_epochs = 500
+
+        mini_batch_size = int(min(x_train.shape[0] / 10, batch_size))
+
+        start_time = time.time()
+
+        hist = self.model.fit(x_train, y_train, batch_size=mini_batch_size, epochs=nb_epochs,
+                              verbose=self.verbose, validation_split=0.25, callbacks=self.callbacks)
+
+        duration = time.time() - start_time
+
+        self.model.save(self.output_directory + 'last_model.hdf5')
+
+        y_pred = self.predict(x_test, y_true,
+                              return_df_metrics=False)
+
+        # save predictions
+        np.save(self.output_directory + 'y_pred.npy', y_pred)
+
+        # convert the predicted from binary to integer
+        y_pred = np.argmax(y_pred, axis=1)
+
+        df_metrics = save_logs(self.output_directory, hist, y_pred, y_true, duration)
+
+        keras.backend.clear_session()
+
+        return df_metrics
+
+    def predict(self, x_test, y_true, return_df_metrics=True):
+        start_time = time.time()
+        model_path = self.output_directory + 'best_model.hdf5'
+        model = keras.models.load_model(model_path)
+        y_pred = model.predict(x_test)
+        if return_df_metrics:
+            y_pred = np.argmax(y_pred, axis=1)
+            df_metrics = calculate_metrics(y_true, y_pred, 0.0)
+            return df_metrics
+        else:
+            test_duration = time.time() - start_time
+            save_test_duration(self.output_directory + 'test_duration.csv', test_duration)
+            return y_pred
