@@ -18,6 +18,17 @@ data_folders_for_archive = {'SF_real_ori': 'Ori_data'}
 #
 # data_folders_for_archive = {'SF_real_under': 'train_under'}
 
+
+# for stratified samppling binary
+# ITERATIONS = 5 # nb of random runs for random initializations
+#
+# DATASET_NAMES = ['solarflare']
+# CLASSIFIERS = ['fcn', 'lstm_fcn', 'resnet']
+# ARCHIVE_NAMES = ['SF_stra']
+# DATA_FOLDERS = {'stra_sampling'}
+#
+# data_folders_for_archive = {'SF_stra': 'stra_sampling'}
+
 # for augmentation on stratified data
 # ITERATIONS = 5
 # DATASET_NAMES = ['solarflare']
