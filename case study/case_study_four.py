@@ -16,8 +16,6 @@ def fit_classifier(method):
     X_train, y_train, X_val, y_val, X_test, y_test = load_data_four(method)
     nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
 
-    nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
-
     enc = sklearn.preprocessing.OneHotEncoder(categories='auto')
     enc.fit(np.concatenate((y_train, y_val, y_test), axis=0).reshape(-1, 1))
     y_train = enc.transform(y_train.reshape(-1, 1)).toarray()
@@ -51,7 +49,7 @@ def create_classifier(classifier_name, input_shape, nb_classes, output_directory
         return mlstm_fcn.Classifier_LSTM_FCN(output_directory, input_shape, nb_classes, verbose)
 
 # change this directory for your machine
-root_dir = '/home/dmlab_a/Peiyu/aug_sf'
+root_dir = 'aug_sf'
 
 if sys.argv[1] == 'run_all':
     for classifier_name in CLASSIFIERS:
