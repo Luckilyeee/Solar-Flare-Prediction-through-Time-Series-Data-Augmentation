@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-from utils.utils import load_aug
-from utils.utils import create_directory, generate_results_csv_10x
+from utils.utils import load_aug_ratios, load_stra_data
+from utils.utils import create_directory, generate_results_csv_6x
 from utils.constants import sizes
 
 import os
@@ -14,12 +14,17 @@ from utils.constants import ARCHIVE_NAMES, DATASET_NAMES
 from utils.constants import ITERATIONS
 
 def fit_classifier(method, size):
-    x_train, x_test, y_train, y_test = load_aug(method, size)
+
+    x_train, y_train, x_val, y_val, x_test, y_test = load_aug_ratios(method, size)
+
+    print("data size is: ", size)
+    print("training/val/test size is: ", x_train.shape, y_train.shape, x_val.shape, y_val.shape, x_test.shape, y_test.shape)
     nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
 
     enc = sklearn.preprocessing.OneHotEncoder(categories='auto')
-    enc.fit(np.concatenate((y_train, y_test), axis=0).reshape(-1, 1))
+    enc.fit(np.concatenate((y_train, y_val, y_test), axis=0).reshape(-1, 1))
     y_train = enc.transform(y_train.reshape(-1, 1)).toarray()
+    y_val = enc.transform(y_val.reshape(-1, 1)).toarray()
     y_test = enc.transform(y_test.reshape(-1, 1)).toarray()
 
     # save orignal y because later we will use binary
@@ -28,12 +33,14 @@ def fit_classifier(method, size):
     if len(x_train.shape) == 2:  # if univariate
         # add a dimension to make it multivariate with one dimension
         x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
+        x_val = x_val.reshape((x_val.shape[0], x_val.shape[1], 1))
         x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
     input_shape = x_train.shape[1:]
+
     classifier = create_classifier(classifier_name, input_shape, nb_classes, output_directory)
 
-    classifier.fit(x_train, y_train, x_test, y_true)
+    classifier.fit(x_train, y_train, x_val, y_val, x_test, y_true)
 
 
 def create_classifier(classifier_name, input_shape, nb_classes, output_directory, verbose=True):
@@ -48,7 +55,7 @@ def create_classifier(classifier_name, input_shape, nb_classes, output_directory
         return mlstm_fcn.Classifier_LSTM_FCN(output_directory, input_shape, nb_classes, verbose)
 
 # change this directory for your machine
-root_dir = '/SF'
+root_dir = 'aug_sf'
 
 if sys.argv[1] == 'run_all':
     for classifier_name in CLASSIFIERS:
@@ -61,7 +68,7 @@ if sys.argv[1] == 'run_all':
                     trr = ''
                     if iter != 0:
                         trr = '_itr_' + str(iter)
-                    tmp_output_directory = root_dir + '/results_10x_256/' + str(size) + '/' + classifier_name + '/' + archive_name + trr + '/'
+                    tmp_output_directory = root_dir + '/results_6x/' + str(size) + '/' + classifier_name + '/' + archive_name + trr + '/'
 
                     for dataset_name in DATASET_NAMES:
                         print('\t\t\tdataset_name: ', dataset_name)
@@ -78,7 +85,7 @@ if sys.argv[1] == 'run_all':
                         create_directory(output_directory + '/DONE')
 
 elif sys.argv[1] == 'generate_results_csv':
-    res = generate_results_csv_10x('res.csv', root_dir)
+    res = generate_results_csv_6x('res.csv', root_dir)
 else:
     # this is the code used to launch an experiment on a dataset
     archive_name = sys.argv[1]
@@ -89,7 +96,7 @@ else:
     if itr == '_itr_0':
         itr = ''
 
-    output_directory = root_dir + '/results_10x_256/' + classifier_name + '/' + archive_name + itr + '/' + \
+    output_directory = root_dir + '/results_6x/' + classifier_name + '/' + archive_name + itr + '/' + \
                        dataset_name + '/'
 
     test_dir_df_metrics = output_directory + 'df_metrics.csv'
@@ -106,7 +113,6 @@ else:
 
         print('DONE')
 
+        # the creation of this directory means
         create_directory(output_directory + '/DONE')
-
-
 
