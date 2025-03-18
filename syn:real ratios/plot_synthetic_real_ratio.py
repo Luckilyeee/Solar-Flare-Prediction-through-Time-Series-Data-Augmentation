@@ -7,9 +7,10 @@ warnings.filterwarnings("ignore")
 warnings.resetwarnings()
 
 plt.rcParams["pdf.use14corefonts"] = True
-models = ['fcn', 'lstm_fcn', 'resnet']
-metrics = ['accuracy', 'precision', 'recall', 'f1', 'tss', 'hss1', 'hss2']
-path = "/aug_sf/results_10x_256/"
+models = ['lstm_fcn', 'fcn', 'resnet']
+metrics = ['Recall', 'TSS', 'HSS']
+path = "aug_sf_updated/results_6x/"
+save_path = "aug_sf_updated/figs/ratio_study/"
 
 def load_data(model):
     df = pd.read_csv(path + model + '/res.csv')
@@ -26,11 +27,11 @@ def plot(df, model, metric):
 
     # Customize the plot
     # plt.title(model + '_' + metric)
-    plt.xlabel('Syn/real ratio')
-    plt.ylabel(metric.upper())
+    plt.xlabel('Syn/real ratio', fontsize=15, fontweight='bold')
+    plt.ylabel(metric.upper(), fontsize=15, fontweight='bold')
     plt.tight_layout()
     # Show the plot
-    plt.savefig(path + model + "_" + metric + '.pdf', format='pdf', dpi=300)
+    plt.savefig(save_path + model + "_" + metric + '.pdf', dpi=300)
     plt.show()
 
 for model in models:
