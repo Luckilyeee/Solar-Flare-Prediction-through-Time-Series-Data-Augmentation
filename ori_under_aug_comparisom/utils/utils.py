@@ -32,6 +32,17 @@ def load_ori_data(method):
 
     return X_train, y_train, X_val, y_val, X_test, y_test
 
+def load_under_data(method):
+    path = "aug_sf/data/"
+    X_train = np.load(path + method + "/xtrain.npy")
+    y_train = np.load(path + method + "/ytrain.npy")
+    X_test = np.load(path  +"Ori_data/test/xtest.npy")
+    y_test = np.load(path + "Ori_data/test/ytest.npy")
+    X_val = np.load(path + "Ori_data/val/xval.npy")
+    y_val = np.load(path + "Ori_data/val/yval.npy")
+
+    return X_train, y_train, X_val, y_val, X_test, y_test
+
 
 def calculate_metrics(y_true, y_pred, duration, y_true_val=None, y_pred_val=None):
     TN, FP, FN, TP = confusion_matrix(y_true, y_pred).ravel()
@@ -88,6 +99,32 @@ def generate_results_csv_0(output_file_name, root_dir):
         print(root_dir + "/results_ori/" + classifier_name + "/" + output_file_name)
 
         res.to_csv(root_dir + "/results_ori/" + classifier_name + "/" + output_file_name, index=False)
+    return res
+
+def generate_results_csv_1(output_file_name, root_dir):
+    for classifier_name in CLASSIFIERS:
+        res = pd.DataFrame(
+            columns=['classifier_name', 'dataset_name', 'archive_name', 'accuracy', 'precision', 'recall', 'f1', 'tss',
+                     'hss1', 'hss2', 'duration'])
+        for archive_name in ARCHIVE_NAMES:
+            for it in range(ITERATIONS):
+                curr_archive_name = archive_name
+                if it != 0:
+                    curr_archive_name = curr_archive_name + '_itr_' + str(it)
+                output_dir = root_dir + '/results_under/' + classifier_name + '/' \
+                                 + curr_archive_name + '/' + 'solarflare' + '/' + 'df_metrics.csv'
+                if not os.path.exists(output_dir):
+                    continue
+
+                df_metrics = pd.read_csv(output_dir)
+                df_metrics['classifier_name'] = classifier_name
+                df_metrics['dataset_name'] = 'solar_flare'
+                df_metrics['archive_name'] = archive_name
+
+                res = pd.concat((res, df_metrics), axis=0, sort=False)
+        print(root_dir + "/results_under/" + classifier_name + "/" + output_file_name)
+
+        res.to_csv(root_dir + "/results_under/" + classifier_name + "/" + output_file_name, index=False)
     return res
 
 def plot_epochs_metric(hist, file_name, metric='loss'):
