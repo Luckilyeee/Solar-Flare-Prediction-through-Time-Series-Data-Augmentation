@@ -44,6 +44,19 @@ def load_under_data(method):
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
+def load_stra_data(method):
+    path = "aug_sf/data/"
+    # training dataset is from the aug_sf/data/train_under folder
+    X_train = np.load(path + method + "/xtrain_subsampled.npy")
+    y_train = np.load(path + method + "/ytrain_subsampled.npy")
+    # test and valitation datasets are from the aug_sf/data/Ori_data/ folder
+    X_test = np.load(path  +"Ori_data/test/xtest.npy")
+    y_test = np.load(path + "Ori_data/test/ytest.npy")
+    X_val = np.load(path + "Ori_data/val/xval.npy")
+    y_val = np.load(path + "Ori_data/val/yval.npy")
+
+    return X_train, y_train, X_val, y_val, X_test, y_test
+
 def load_data_aug_onlyx(method):
     print("loading syn data for method:", method)
     # discriminative_guided_warp required all classes to generate synthetic data
@@ -181,6 +194,32 @@ def generate_results_csv_1(output_file_name, root_dir):
         print(root_dir + "/results_under/" + classifier_name + "/" + output_file_name)
 
         res.to_csv(root_dir + "/results_under/" + classifier_name + "/" + output_file_name, index=False)
+    return res
+
+def generate_results_csv_2(output_file_name, root_dir):
+    for classifier_name in CLASSIFIERS:
+        res = pd.DataFrame(
+            columns=['classifier_name', 'dataset_name', 'archive_name', 'accuracy', 'precision', 'recall', 'f1', 'tss',
+                     'hss1', 'hss2', 'duration'])
+        for archive_name in ARCHIVE_NAMES:
+            for it in range(ITERATIONS):
+                curr_archive_name = archive_name
+                if it != 0:
+                    curr_archive_name = curr_archive_name + '_itr_' + str(it)
+                output_dir = root_dir + '/results_stratify/' + classifier_name + '/' \
+                                 + curr_archive_name + '/' + 'solarflare' + '/' + 'df_metrics.csv'
+                if not os.path.exists(output_dir):
+                    continue
+
+                df_metrics = pd.read_csv(output_dir)
+                df_metrics['classifier_name'] = classifier_name
+                df_metrics['dataset_name'] = 'solar_flare'
+                df_metrics['archive_name'] = archive_name
+
+                res = pd.concat((res, df_metrics), axis=0, sort=False)
+        print(root_dir + "/results_stratify/" + classifier_name + "/" + output_file_name)
+
+        res.to_csv(root_dir + "/results_stratify/" + classifier_name + "/" + output_file_name, index=False)
     return res
 
 def generate_results_csv_augstra_onlyx(output_file_name, root_dir):
