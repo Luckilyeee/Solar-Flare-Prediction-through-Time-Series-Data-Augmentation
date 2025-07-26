@@ -7,10 +7,10 @@ import os
 
 plt.rcParams["pdf.use14corefonts"] = True
 
-path_xm_ori = '/home/dmlab_a/Peiyu/aug_sf/results_ori_xm/'
-path_xm_aug = '/home/dmlab_a/Peiyu/aug_sf/results_aug_xm/'
+path_xm_ori = '/aug_sf/results_ori_xm/'
+path_xm_aug = '/aug_sf/results_aug_xm/'
 
-path_figs = '/home/dmlab_a/Peiyu/aug_sf/figs_final/xm_vs_aug/'
+path_figs = '/aug_sf/figs_final/xm_vs_aug/'
 
 aug_methods = ['ww', 'ws', 'wdba', 'tw', 'spawner', 'rgw', 'mw', 'dgw', 'permutation', 'scaling', 'jitter', 'rotation']
 labels = ['WW', 'WS', 'WDBA', 'TW', 'SPAWNER', 'RGW', 'MW', 'DGW', 'PM', 'SC', 'JIT', 'ROT']
