@@ -5,8 +5,8 @@ from collections import Counter
 import numpy as np
 import os
 
-data_path = "/home/dmlab_a/Peiyu0/Solarflare/"
-save_path = "/home/dmlab_a/Peiyu/aug_sf/data/XvsM/"
+data_path = "Solarflare/"
+save_path = "aug_sf/data/XvsM/"
 def load_ori_data(method):
     inputs = pd.read_pickle(data_path + method + "/inputs.pck")
     labels = pd.read_pickle(data_path + method + "/labels.pck")
