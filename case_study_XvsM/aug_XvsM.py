@@ -13,7 +13,7 @@ from syn.utils import augmentation as aug
 random.seed(42)
 np.random.seed(42)
 
-results_path = "/home/dmlab_a/Peiyu/aug_sf/data/XvsM/syn"
+results_path = "aug_sf/data/XvsM/syn"
 for name in ['Solarflare']:
     try:
         print('Dataset:', name)
