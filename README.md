@@ -1,6 +1,9 @@
 # Evaluating Time Series Augmentation Techniques for Deep Learning-Based Solar Flare Prediction
 This is the repository for our work titled "[Evaluating Time Series Augmentation Techniques for Deep Learning-Based Solar Flare Prediction](https://iopscience.iop.org/article/10.3847/1538-4365/adfa2a/pdf)", which has been accepted to [The Astrophysical Journal Supplement Series](https://iopscience.iop.org/journal/0067-0049).
 
+# Abstract
+Accurate forecasting of solar flares is crucial for mitigating their severe impacts on space-based and communication systems. Deep learning models have shown promise in predicting flare activity using magnetic field measurements of solar active regions. However, the scarcity and imbalance of flare occurrence data—particularly for major flares—pose significant challenges to model robustness and generalization. This study provides a comprehensive evaluation of time-series data augmentation techniques to improve deep learning-based solar flare prediction. Using the benchmark Space Weather Analytics for Solar Flares dataset, which offers multivariate magnetic field parameter time series, we assess 12 augmentation methods across three architectures: fully convolutional network (FCN), multivariate LSTM-FCN, and residual network. Our primary experiments address the binary classification of major (M- and X-class) versus minor (C-, B-, and FQ-class) flares, using metrics tailored for imbalanced data, including recall, true skill statistic, Heidke skill score, and the Gini coefficient. A case study on X versus M classification further examines performance under a simpler, more balanced setting. Results show that select augmentation strategies yield measurable gains across different models and scenarios, offering a viable path forward for addressing data scarcity in space weather forecasting tasks.
+
 # Data Download
 Download the raw data from: https://dmlab.cs.gsu.edu/solar/data/data-comp-2020/
 
