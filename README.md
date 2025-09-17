@@ -1,5 +1,5 @@
 # Evaluating Time Series Augmentation Techniques for Deep Learning-Based Solar Flare Prediction
-This is the repository for our work titled "[Evaluating Time Series Augmentation Techniques for Deep Learning-Based Solar Flare Prediction](https://iopscience.iop.org/article/10.3847/1538-4365/adfa2a/pdf)", which has been accepted to [The Astrophysical Journal Supplement Series](https://iopscience.iop.org/journal/0067-0049)
+This is the repository for our work titled "[Evaluating Time Series Augmentation Techniques for Deep Learning-Based Solar Flare Prediction](https://iopscience.iop.org/article/10.3847/1538-4365/adfa2a/pdf)", which has been accepted to [The Astrophysical Journal Supplement Series](https://iopscience.iop.org/journal/0067-0049).
 
 # Data Download
 Download the raw data from: https://dmlab.cs.gsu.edu/solar/data/data-comp-2020/
